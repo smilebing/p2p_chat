@@ -1,6 +1,6 @@
-﻿namespace P2PChat
+﻿namespace P2P_server
 {
-    partial class Form1
+    partial class Form_status
     {
         /// <summary>
         /// 必需的设计器变量。
@@ -28,9 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.SuspendLayout();
+            // 
+            // Form_status
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Text = "Form1";
+            this.ClientSize = new System.Drawing.Size(491, 283);
+            this.Name = "Form_status";
+            this.Text = "server status";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form_status_FormClosed);
+            this.Load += new System.EventHandler(this.Form_status_Load);
+            this.ResumeLayout(false);
+
         }
 
         #endregion
