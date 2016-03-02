@@ -54,10 +54,6 @@ namespace Model
         private AsySocketClosedEventHandler onClosed = null;
 
         #endregion
-
-
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -69,14 +65,16 @@ namespace Model
 
             try
             {
-                IPAddress ip = Dns.GetHostAddresses(LocalIP)[0];
+                //IPAddress ip = Dns.GetHostAddresses(LocalIP)[0];
+                IPAddress ip = IPAddress.Any;
                 IPEndPoint ipe = new IPEndPoint(ip, LocalPort);
                 mID = Guid.NewGuid().ToString();
                 mSocket.Bind(ipe);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-
+                Console.WriteLine("构造socket 出错!");
+                Console.WriteLine(e.Message);
 
             }
         }
@@ -90,6 +88,13 @@ namespace Model
             mID = Guid.NewGuid().ToString();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public void sayHello()
+        {
+            Console.WriteLine();
+        }
 
 
         #region 公共属性
@@ -141,6 +146,7 @@ namespace Model
         {
             if (mSocket == null)
                 throw new ArgumentNullException("连接不存在");
+
             mSocket.Listen(backlog);
             mSocket.BeginAccept(new AsyncCallback(AcceptCallBack), null);//异步
         }
@@ -205,6 +211,7 @@ namespace Model
                 throw new ArgumentNullException("连接不存在");
             if (SendData == null)
                 return;
+            //用beginSendTo 直接将消息发送给指定 IPEndPoint
             mSocket.BeginSendTo(SendData, 0, SendData.Length, 0, EndPoint, new AsyncCallback(SendToCallBack), null);
             //sendToDone.WaitOne();
         }

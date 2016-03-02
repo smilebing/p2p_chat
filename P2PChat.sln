@@ -5,6 +5,10 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2PChat", "P2PChat\P2PChat.csproj", "{71DBD0DB-1344-4244-89D2-80882446C118}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2P_server", "P2P_server\P2P_server.csproj", "{BB82B401-055E-44D2-9FC6-ADFEBFB40960}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Model", "Model\Model.csproj", "{3652F58C-28A9-4FD1-95D9-883007C1E813}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{71DBD0DB-1344-4244-89D2-80882446C118}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71DBD0DB-1344-4244-89D2-80882446C118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71DBD0DB-1344-4244-89D2-80882446C118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB82B401-055E-44D2-9FC6-ADFEBFB40960}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB82B401-055E-44D2-9FC6-ADFEBFB40960}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB82B401-055E-44D2-9FC6-ADFEBFB40960}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB82B401-055E-44D2-9FC6-ADFEBFB40960}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3652F58C-28A9-4FD1-95D9-883007C1E813}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3652F58C-28A9-4FD1-95D9-883007C1E813}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3652F58C-28A9-4FD1-95D9-883007C1E813}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3652F58C-28A9-4FD1-95D9-883007C1E813}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

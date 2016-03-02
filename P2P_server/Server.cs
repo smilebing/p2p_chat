@@ -33,16 +33,7 @@ namespace P2P_server
         public bool listen()
         
         {
-            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-           // IPAddress ip = getValidIP(mip);
-           // int port = getValidPort(mprot);
-
-
-           // UdpClient udpClient = new UdpClient(12304);
-           // Thread rec_thread = new Thread(ReceiveMessage);
-
-
-
+   
 
             
                 IPEndPoint localIpep = new IPEndPoint(
@@ -55,22 +46,13 @@ namespace P2P_server
 
                 Console.WriteLine( "UDP监听器已成功启动");
 
-                Thread send_thread = new Thread(SendMessage);
-                send_thread.Start();
+               // Thread send_thread = new Thread(SendMessage);
+               // send_thread.Start();
 
-
-
-
-
-
-
-
-
-
-
-           // IPEndPoint ipep = new IPEndPoint(ip, port);
             return false;
         }
+
+
 
         //接收函数
         private void ReceiveMessage(object obj)
@@ -85,7 +67,15 @@ namespace P2P_server
                         bytRecv, 0, bytRecv.Length);
                     Console.WriteLine("收到信息："+message);
 
-                  
+
+                    //如果消息传输完整
+                    if(message_hash_right(message))
+                    {
+                        string msg = message.Substring(0, message.Length - 32);
+                        //处理消息
+                        deal_message(msg,remoteIpep);                      
+                    }
+
                 }
                 catch (Exception ex)
                 {
@@ -95,8 +85,51 @@ namespace P2P_server
             }
         }
 
-        //发送消息
 
+
+        //判断消息类型
+        private void deal_message(string message,IPEndPoint remoteIpep)
+        {
+            string kind = message.Substring(0, 1);
+            //更新msg
+            string msg = message.Substring(1,message.Length-1);
+            // h 心跳包 
+            // r 注册
+            // l 登录
+
+            if(string.Equals(kind,"h"))
+            {
+                //心跳包
+
+            }
+
+            if (string.Equals(kind, "l"))
+            {
+                //登录
+                
+            }
+
+            if (string.Equals(kind, "r"))
+            {
+                //注册
+                //msg = id + 密码
+                //
+            }
+        }
+
+
+        //判断 接收到的消息是否完整
+        private bool message_hash_right(string message)
+        {
+
+            string msg = message.Substring(0, message.Length - 32);
+            string hash = message.Substring(message.Length - 32);
+
+            return string.Equals(hash, Hash_MD5_32(msg));
+        }
+
+
+        //发送消息
         private void SendMessage()
         {
             //object obj = "wo shi client";
@@ -167,6 +200,53 @@ namespace P2P_server
                 return -1;
             }
             return lport;
-        }  
+        }
+
+
+        //计算 字符串的 hash 大写值
+        public static string Hash_MD5_32(string word)
+        {
+            try
+            {
+                System.Security.Cryptography.MD5CryptoServiceProvider MD5CSP
+                    = new System.Security.Cryptography.MD5CryptoServiceProvider();
+
+                byte[] bytValue = System.Text.Encoding.UTF8.GetBytes(word);
+                byte[] bytHash = MD5CSP.ComputeHash(bytValue);
+                MD5CSP.Clear();
+
+                //根据计算得到的Hash码翻译为MD5码
+                string sHash = "", sTemp = "";
+                for (int counter = 0; counter < bytHash.Count(); counter++)
+                {
+                    long i = bytHash[counter] / 16;
+                    if (i > 9)
+                    {
+                        sTemp = ((char)(i - 10 + 0x41)).ToString();
+                    }
+                    else
+                    {
+                        sTemp = ((char)(i + 0x30)).ToString();
+                    }
+                    i = bytHash[counter] % 16;
+                    if (i > 9)
+                    {
+                        sTemp += ((char)(i - 10 + 0x41)).ToString();
+                    }
+                    else
+                    {
+                        sTemp += ((char)(i + 0x30)).ToString();
+                    }
+                    sHash += sTemp;
+                }
+
+                //返回大写字符串
+                return  sHash;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

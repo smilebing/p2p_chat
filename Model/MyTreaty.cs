@@ -12,16 +12,16 @@ namespace Model
     public class MyTreaty
     {
         public int Type { get; set; }
-        public string Id { get; set; }
+        public string Name { get; set; }
         public byte[] Content { get; set; }
         public DateTime Date { get; set; }
         public string FileName{ get; set; }
 
 
-        public MyTreaty(int type, string id, byte[] content,DateTime date,string fileName)
+        public MyTreaty(int type, string name, byte[] content,DateTime date,string fileName)
         {
             this.Type = type;
-            this.Id = id;
+            this.Name = name;
             this.Content = content;
             this.Date = date;
             this.FileName = fileName;

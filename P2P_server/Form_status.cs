@@ -11,6 +11,7 @@ using System.Data.OleDb;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
+using Model;
 
 
 namespace P2P_server
@@ -32,12 +33,7 @@ namespace P2P_server
             conn = new OleDbConnection("provider=Microsoft.Jet.OLEDB.4.0;data source=" + exePath + @"\P2P_db.mdb");
 
             //将工作项加入到线程池队列中，这里可以传递一个线程参数
-            ThreadPool.QueueUserWorkItem(TestMethod, "Hello--------------");
-            ThreadPool.QueueUserWorkItem(server);
 
-
-            Server s = new Server();
-            s.listen();
         
         }
 
@@ -47,19 +43,6 @@ namespace P2P_server
         {
             conn.Close();
         }
-
-
-        public static void TestMethod(object data)
-        {
-            string datastr = data as string;
-            Console.WriteLine(datastr);
-        }
-
-
-
-
-
-
 
 
 
@@ -154,6 +137,141 @@ namespace P2P_server
                 Console.WriteLine(Encoding.ASCII.GetString(data, 0, recv));
                 newsock.SendTo(data, recv, SocketFlags.None, Remote);
             }  
+        }
+
+
+        
+        //定义一个异步传输的socket
+        AsySocket listener = null;
+        SortedList<string, AsySocket> clients = new SortedList<string, AsySocket>();
+
+
+
+        //开启监听
+        private void button_listen_Click(object sender, EventArgs e)
+        {
+           
+            listener = new AsySocket("192.168.1.123", 6789);
+            listener.OnAccept += new AcceptEventHandler(listener_OnAccept);
+            listener.Listen(5);
+            button_listen.Enabled = false;
+
+        }
+
+
+        /// <summary>
+        /// 有客户端接入触发此事件
+        /// </summary>
+        /// <param name="AcceptedSocket"></param>
+        void listener_OnAccept(AsySocket AcceptedSocket)
+        {
+            //注册事件
+
+            AcceptedSocket.OnClosed += new AsySocketClosedEventHandler(AcceptedSocket_OnClosed);
+            AcceptedSocket.OnStreamDataAccept += new StreamDataAcceptHandler(AcceptedSocket_OnStreamDataAccept);
+            AcceptedSocket.BeginAcceptData();
+            //加入
+            AddMsg("", AcceptedSocket.ID);
+            AddMsg(string.Format("{0}上线！", AcceptedSocket.ID), "");
+
+            clients.Add(AcceptedSocket.ID, AcceptedSocket);
+        }
+
+
+        void AcceptedSocket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
+        {
+            if (AcceptData.Type == 0)//文本
+            {
+                string msg = AcceptData.Date + " " + AcceptData.Name + " : " + System.Text.Encoding.Default.GetString(AcceptData.Content).Trim();
+                AddMsg(msg, "");
+
+                for (int i = 0; i < clients.Count; i++)
+                {
+                    if (clients.Values[i].ID != AccepterID)
+                    {
+                        clients.Values[i].ASend(0, AcceptData.Name, AcceptData.Content, AcceptData.Date, AcceptData.FileName);
+                    }
+                }
+
+            }
+            else if (AcceptData.Type == 1)
+            {
+                //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
+                //AddMsg(msg, "");
+                //picBox.Image = Image.FromStream(new MemoryStream(AcceptData.Content));
+                //for (int i = 0; i < clients.Count; i++)
+                //{
+                //    if (clients.Values[i].ID != AccepterID)
+                //    {
+                //        clients.Values[i].ASend(1, AcceptData.Name, AcceptData.Content, AcceptData.Date, AcceptData.FileName);
+                //    }
+                //}
+            }
+            else if (AcceptData.Type == 2)
+            {
+                //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "名叫：" + AcceptData.FileName + "的文件";
+                //if (MessageBox.Show(msg + "，是否接收", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK)
+                //{
+
+                //    try
+                //    {
+
+                //        sFD.Filter = AcceptData.FileName + " | *." + Path.GetExtension(AcceptData.FileName);
+
+                //        if (sFD.ShowDialog() == DialogResult.OK)
+                //        {
+                //            FileStream fs = new FileStream(sFD.FileName, FileMode.Create, FileAccess.Write);
+                //            fs.Write(AcceptData.Content, 0, Convert.ToInt32(AcceptData.Content.Length));
+                //            fs.Close();
+                //            AddMsg(msg, "");
+                //        }
+
+                //    }
+                //    catch (Exception)
+                //    {
+
+                //        throw;
+                //    }
+
+                //}
+            }
+
+
+        }
+
+        /// <summary>
+        /// 关闭客户端触发此事件
+        /// </summary>
+        /// <param name="SocketID"></param>
+        /// <param name="ErrorMessage"></param>
+        void AcceptedSocket_OnClosed(string SocketID, string ErrorMessage)
+        {
+            //客户端关闭
+            clients.Remove(SocketID);
+            lstUser.Items.Remove(SocketID);
+            // MessageBox.Show(ErrorMessage);
+            AddMsg(string.Format("{0}下线！", SocketID), "");
+            //Environment.Exit(0);
+        }
+        /// <summary>
+        /// 添加消息
+        /// </summary>
+        /// <param name="msg"></param>
+        void AddMsg(string msg, string id)
+        {
+
+            if (msg != null && msg != "")
+            {
+                ListViewItem lv = new ListViewItem(msg);
+                lv.SubItems.Add(msg);
+                lstMsg.Items.Add(lv);
+            }
+            if (id != null && id != "")
+            {
+                lstUser.Items.Add(id);
+            }
+
+
         }
     }
 }
