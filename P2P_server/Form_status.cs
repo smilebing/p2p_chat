@@ -30,6 +30,8 @@ namespace P2P_server
 
         private void Form_status_Load(object sender, EventArgs e)
         {
+            CheckForIllegalCrossThreadCalls = false;
+
             conn = new OleDbConnection("provider=Microsoft.Jet.OLEDB.4.0;data source=" + exePath + @"\P2P_db.mdb");
 
             //将工作项加入到线程池队列中，这里可以传递一个线程参数
@@ -151,7 +153,8 @@ namespace P2P_server
         private void button_listen_Click(object sender, EventArgs e)
         {
            
-            listener = new AsySocket("192.168.1.123", 6789);
+            //listener = new AsySocket("172.0.0.1", 6789);
+            listener = new AsySocket("any", 6789);
             listener.OnAccept += new AcceptEventHandler(listener_OnAccept);
             listener.Listen(5);
             button_listen.Enabled = false;
@@ -178,10 +181,19 @@ namespace P2P_server
         }
 
 
+        //接收client发送过来的 MyTreaty
         void AcceptedSocket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
         {
-            if (AcceptData.Type == 0)//文本
+            //注册 type=0 
+            //登录 type=1
+            //
+            if (AcceptData.Type == 1)//用户登录
             {
+      
+
+
+
+
                 string msg = AcceptData.Date + " " + AcceptData.Name + " : " + System.Text.Encoding.Default.GetString(AcceptData.Content).Trim();
                 AddMsg(msg, "");
 
@@ -194,8 +206,16 @@ namespace P2P_server
                 }
 
             }
-            else if (AcceptData.Type == 1)
+            else if (AcceptData.Type == 0) //用户注册
             {
+                string name = AcceptData.Name;
+                string pwd = AcceptData.Pwd;
+
+                Console.WriteLine("收到注册信息：" + name + "   " + pwd);
+
+
+
+
                 //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
                 //AddMsg(msg, "");
                 //picBox.Image = Image.FromStream(new MemoryStream(AcceptData.Content));
@@ -270,8 +290,15 @@ namespace P2P_server
             {
                 lstUser.Items.Add(id);
             }
-
-
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Form_Access_test t = new Form_Access_test();
+            t.Show();
+        }
+
+    
+    
     }
 }

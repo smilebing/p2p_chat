@@ -66,7 +66,15 @@ namespace Model
             try
             {
                 //IPAddress ip = Dns.GetHostAddresses(LocalIP)[0];
-                IPAddress ip = IPAddress.Any;
+                IPAddress ip;
+                if (string.Compare(LocalIP, "any") == 0)
+                {
+                    ip = IPAddress.Any;
+                }
+                else
+                {
+                    ip = IPAddress.Parse(LocalIP);
+                }
                 IPEndPoint ipe = new IPEndPoint(ip, LocalPort);
                 mID = Guid.NewGuid().ToString();
                 mSocket.Bind(ipe);

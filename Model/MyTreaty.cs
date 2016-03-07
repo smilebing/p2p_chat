@@ -16,12 +16,24 @@ namespace Model
         public byte[] Content { get; set; }
         public DateTime Date { get; set; }
         public string FileName{ get; set; }
+        public string Pwd { get; set; }
 
 
-        public MyTreaty(int type, string name, byte[] content,DateTime date,string fileName)
+        public MyTreaty(int type, string name,string pwd, byte[] content,DateTime date,string fileName)
         {
             this.Type = type;
             this.Name = name;
+            this.Pwd = pwd;
+            this.Content = content;
+            this.Date = date;
+            this.FileName = fileName;
+        }
+
+        public MyTreaty(int type, string name, byte[] content, DateTime date, string fileName)
+        {
+            this.Type = type;
+            this.Name = name;
+        
             this.Content = content;
             this.Date = date;
             this.FileName = fileName;

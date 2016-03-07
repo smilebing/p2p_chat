@@ -31,6 +31,7 @@
             this.button_listen = new System.Windows.Forms.Button();
             this.lstMsg = new System.Windows.Forms.ListView();
             this.lstUser = new System.Windows.Forms.ListBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button_listen
@@ -63,11 +64,22 @@
             this.lstUser.Size = new System.Drawing.Size(141, 232);
             this.lstUser.TabIndex = 18;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(133, 328);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 19;
+            this.button1.Text = "test";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // Form_status
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(740, 388);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.lstUser);
             this.Controls.Add(this.lstMsg);
             this.Controls.Add(this.button_listen);
@@ -84,6 +96,7 @@
         private System.Windows.Forms.Button button_listen;
         private System.Windows.Forms.ListView lstMsg;
         private System.Windows.Forms.ListBox lstUser;
+        private System.Windows.Forms.Button button1;
     }
 }
 
