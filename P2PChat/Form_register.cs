@@ -35,7 +35,9 @@ namespace P2PChat
         {
             
             //服务器的地址
-            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
+            server_ip_port = new IPEndPoint(IPAddress.Parse("10.11.125.60"), 6789);
+            
+//            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
             //连接
             socket = new AsySocket("any", 1234);
 
@@ -74,7 +76,7 @@ namespace P2PChat
 
             
 
-            MyTreaty register_msg=new MyTreaty(6,textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(),UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()),DateTime.Now,"");
+            MyTreaty register_msg=new MyTreaty(0,textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(),UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()),DateTime.Now,"");
 
             //发送注册信息
             socket.ASend(0, textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(), UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()), DateTime.Now, "");
@@ -100,12 +102,14 @@ namespace P2PChat
         void socket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
         {
             string result = AcceptData.Name;
+            Console.WriteLine("client 收到信息 ");
 
             if (AcceptData.Type == 1)//登录结果
             {       
                 if(result=="y")
                 {
-                    MessageBox.Show("yes");
+                    MessageBox.Show("登录成功");
+                    //建立在线用户窗体
                 }
                 else
                 {
@@ -116,11 +120,11 @@ namespace P2PChat
             {
                 if (result == "y")
                 {
-                    MessageBox.Show("yes");
+                    MessageBox.Show("注册成功");
                 }
                 else
                 {
-                    MessageBox.Show("登录失败");
+                    MessageBox.Show("注册失败");
                 }
                 //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
                 //AddMsg(msg);

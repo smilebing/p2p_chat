@@ -12,13 +12,19 @@ using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using Model;
+using System.IO;
 
 
 namespace P2P_server
 {
     public partial class Form_status : Form
     {
-        static string exePath = @"C:\Users\bing\Documents\P2PChat";//本程序所在路径
+        static DirectoryInfo dir = new DirectoryInfo(Application.StartupPath).Parent.Parent.Parent;
+        static string target = dir.FullName;
+            
+        //static string exePath = @"C:\Users\bing\Documents\P2PChat";//本程序所在路径
+        static string exePath = target;
+        
         //创建连接对象
         OleDbConnection conn;
         Access access;
@@ -31,6 +37,7 @@ namespace P2P_server
 
         private void Form_status_Load(object sender, EventArgs e)
         {
+            Console.WriteLine(target);
             //连接数据库
             CheckForIllegalCrossThreadCalls = false;
             conn = new OleDbConnection("provider=Microsoft.Jet.OLEDB.4.0;data source=" + exePath + @"\P2P_db.mdb");
@@ -201,11 +208,12 @@ namespace P2P_server
                         //发送登录结果
                         if (access.search(name, pwd) == true)
                         {
-                            clients.Values[i].ASend(1, "y", "", null, DateTime.Now, "");
+                            clients.Values[i].ASend(1, "y", "", UTF8Encoding.UTF8.GetBytes("y"), DateTime.Now, "");
                         }
                         else
                         {
-                            clients.Values[i].ASend(1, "n", "", null, DateTime.Now, "");
+                            clients.Values[i].ASend(1, "n", "", UTF8Encoding.UTF8.GetBytes("n"), DateTime.Now, "");
+
                         }
                     }
                 }
@@ -243,13 +251,19 @@ namespace P2P_server
                     if (clients.Values[i].ID == AccepterID)
                     {
                         //发送登录结果
-                        if (access.search(name, pwd) == true)
+                        if (access.insert(name, pwd) == true)
                         {
-                            clients.Values[i].ASend(1, "y", "", null, DateTime.Now, "");
+                            clients.Values[i].ASend(1, "y", "", UTF8Encoding.UTF8.GetBytes("y"), DateTime.Now, "");
+
+                            Console.WriteLine("server 发送注册结果 y");
                         }
                         else
                         {
-                            clients.Values[i].ASend(1, "n", "", null, DateTime.Now, "");
+                            clients.Values[i].ASend(1, "n", "", UTF8Encoding.UTF8.GetBytes("n"), DateTime.Now, "");
+
+                          
+                            Console.WriteLine("server 发送注册结果 n");
+
                         }
                     }
                 }
