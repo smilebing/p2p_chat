@@ -34,14 +34,15 @@ namespace P2PChat
         private void Form_register_Load(object sender, EventArgs e)
         {
             
-
-            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.21.125.130"), 6789);
+            //服务器的地址
+            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
             //连接
             socket = new AsySocket("any", 1234);
-            //socket = new AsySocket("172.0.0.1", 0);
-            //socket=new AsySocket()
+
+            //发送消息事件
             socket.OnSended += new AsySocketEventHandler(socket_OnSended);
 
+            //接收到socket 信息
             socket.OnStreamDataAccept += new StreamDataAcceptHandler(socket_OnStreamDataAccept);
 
             socket.OnClosed += new AsySocketClosedEventHandler(socket_OnClosed);
@@ -73,38 +74,55 @@ namespace P2PChat
 
             
 
-            MyTreaty register_msg=new MyTreaty(6,textBox_name.Text.Trim(),UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()),DateTime.Now,"");
+            MyTreaty register_msg=new MyTreaty(6,textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(),UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()),DateTime.Now,"");
 
-            socket.ASend(6, textBox_name.Text.Trim(), UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()), DateTime.Now, "");
+            //发送注册信息
+            socket.ASend(0, textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(), UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()), DateTime.Now, "");
             type = 0;
-
-        
-
 
             textBox_name.Text = "";
             textBox_pwd1.Text = "";
             textBox_pwd2.Text = "";
         }
 
-        //关闭窗口后 关闭数据库连接
+        //关闭窗口
         private void Form_register_FormClosed(object sender, FormClosedEventArgs e)
         {
-         
+            Environment.Exit(0);
         }
 
 
-
+        /// <summary>
+        /// 接收socket 信息
+        /// </summary>
+        /// <param name="AccepterID"></param>
+        /// <param name="AcceptData"></param>
         void socket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
         {
-            if (AcceptData.Type == 0)//文本
-            {
-                string msg = AcceptData.Date + " " + AcceptData.Name + " : " + System.Text.Encoding.Default.GetString(AcceptData.Content).Trim();
-                //AddMsg(msg);
-                Console.WriteLine("收到消息:"+msg);
+            string result = AcceptData.Name;
+
+            if (AcceptData.Type == 1)//登录结果
+            {       
+                if(result=="y")
+                {
+                    MessageBox.Show("yes");
+                }
+                else
+                {
+                    MessageBox.Show("登录失败");
+                }
             }
-            else if (AcceptData.Type == 1)
+            else if (AcceptData.Type == 0)
             {
-                string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
+                if (result == "y")
+                {
+                    MessageBox.Show("yes");
+                }
+                else
+                {
+                    MessageBox.Show("登录失败");
+                }
+                //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
                 //AddMsg(msg);
                 //picBox.Image = Image.FromStream(new MemoryStream(AcceptData.Content));
             }

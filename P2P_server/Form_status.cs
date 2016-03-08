@@ -21,6 +21,7 @@ namespace P2P_server
         static string exePath = @"C:\Users\bing\Documents\P2PChat";//本程序所在路径
         //创建连接对象
         OleDbConnection conn;
+        Access access;
 
 
         public Form_status()
@@ -30,9 +31,11 @@ namespace P2P_server
 
         private void Form_status_Load(object sender, EventArgs e)
         {
+            //连接数据库
             CheckForIllegalCrossThreadCalls = false;
-
             conn = new OleDbConnection("provider=Microsoft.Jet.OLEDB.4.0;data source=" + exePath + @"\P2P_db.mdb");
+            access = new Access(conn);
+            access.openConn();
    
         }
 
@@ -40,7 +43,7 @@ namespace P2P_server
         //关闭窗体
         private void Form_status_FormClosed(object sender, FormClosedEventArgs e)
         {
-            conn.Close();
+            access.closeConn();
         }
 
 
@@ -178,13 +181,34 @@ namespace P2P_server
 
         //接收client发送过来的 MyTreaty
         void AcceptedSocket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
-        {
+        {  
+            //文本 type=6
+            //图片 type=7
             //注册 type=0 
             //登录 type=1
-            //
+            string name = AcceptData.Name;
+            string pwd = AcceptData.Pwd;
+
             if (AcceptData.Type == 1)//用户登录
             {
-      
+               
+                //查找socket
+                for(int i=0;i<clients.Count;i++)
+                {
+                    if (clients.Values[i].ID == AccepterID)
+                    {
+                        Console.WriteLine("登录 比对id");
+                        //发送登录结果
+                        if (access.search(name, pwd) == true)
+                        {
+                            clients.Values[i].ASend(1, "y", "", null, DateTime.Now, "");
+                        }
+                        else
+                        {
+                            clients.Values[i].ASend(1, "n", "", null, DateTime.Now, "");
+                        }
+                    }
+                }
 
 
 
@@ -192,23 +216,43 @@ namespace P2P_server
                 string msg = AcceptData.Date + " " + AcceptData.Name + " : " + System.Text.Encoding.Default.GetString(AcceptData.Content).Trim();
                 AddMsg(msg, "");
 
-                for (int i = 0; i < clients.Count; i++)
-                {
-                    if (clients.Values[i].ID != AccepterID)
-                    {
-                        clients.Values[i].ASend(0, AcceptData.Name, AcceptData.Content, AcceptData.Date, AcceptData.FileName);
-                    }
-                }
+
+                //用来转发消息
+                //for (int i = 0; i < clients.Count; i++)
+
+                //{
+                //    if (clients.Values[i].ID != AccepterID)
+                //    {
+                        //clients.Values[i].ASend(0, AcceptData.Name, AcceptData.Content, AcceptData.Date, AcceptData.FileName);
+                //    }
+                //}
 
             }
             else if (AcceptData.Type == 0) //用户注册
             {
-                string name = AcceptData.Name;
-                string pwd = AcceptData.Pwd;
+              
 
                 Console.WriteLine("收到注册信息：" + name + "   " + pwd);
 
+             
+                //查找socket
+                for (int i = 0; i < clients.Count; i++)
+                {
+                    Console.WriteLine("注册 比对id");
 
+                    if (clients.Values[i].ID == AccepterID)
+                    {
+                        //发送登录结果
+                        if (access.search(name, pwd) == true)
+                        {
+                            clients.Values[i].ASend(1, "y", "", null, DateTime.Now, "");
+                        }
+                        else
+                        {
+                            clients.Values[i].ASend(1, "n", "", null, DateTime.Now, "");
+                        }
+                    }
+                }
 
 
                 //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
@@ -249,6 +293,13 @@ namespace P2P_server
                 //    }
 
                 //}
+            }
+            else if(AcceptData.Type==6)
+            {
+                //string name = AcceptData.Name;
+                //string pwd = AcceptData.Pwd;
+
+                //Console.WriteLine("收到注册信息：" + name + "   " + pwd);
             }
 
 

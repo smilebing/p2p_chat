@@ -11,10 +11,12 @@ using System.Threading;
 namespace Model
 { 
     public delegate void StreamDataAcceptHandler(string AccepterID, MyTreaty AcceptData);
-
     public delegate void AsySocketEventHandler(string SenderID, string EventMessage);
     public delegate void AcceptEventHandler(AsySocket AcceptedSocket);
     public delegate void AsySocketClosedEventHandler(string SocketID, string ErrorMessage);
+   
+    
+    
     class MySocket
     {
     }
@@ -62,6 +64,7 @@ namespace Model
         public AsySocket(string LocalIP, int LocalPort)
         {
             mSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+           
 
             try
             {
@@ -94,14 +97,6 @@ namespace Model
         {
             mSocket = linkObject;
             mID = Guid.NewGuid().ToString();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void sayHello()
-        {
-            Console.WriteLine();
         }
 
 
@@ -186,13 +181,13 @@ namespace Model
             mSocket.BeginSend(SendData, 0, SendData.Length, 0, new AsyncCallback(SendCallBack), mSocket);
             //sendDone.WaitOne();
         }
-        public void ASend(int Type, string Name, byte[] Content, DateTime date, string fileName)
+        public void ASend(int Type, string Name,string Pwd, byte[] Content, DateTime date, string fileName)
         {
             if (mSocket == null)
                 throw new ArgumentNullException("连接不存在");
             if (Content == null)
                 return;
-            MyTreaty my = new MyTreaty(Type, Name, Content, date, fileName);
+            MyTreaty my = new MyTreaty(Type, Name,Pwd ,Content, date, fileName);
             byte[] SendData = my.GetBytes();
             mSocket.BeginSend(SendData, 0, SendData.Length, 0, new AsyncCallback(SendCallBack), mSocket);
 
@@ -221,6 +216,7 @@ namespace Model
                 return;
             //用beginSendTo 直接将消息发送给指定 IPEndPoint
             mSocket.BeginSendTo(SendData, 0, SendData.Length, 0, EndPoint, new AsyncCallback(SendToCallBack), null);
+            
             //sendToDone.WaitOne();
         }
         /// <summary>
@@ -237,6 +233,7 @@ namespace Model
         #endregion
 
         #region 私有方法
+        
         private void AcceptCallBack(IAsyncResult ar)
         {
             Socket handler = mSocket.EndAccept(ar);
@@ -247,6 +244,8 @@ namespace Model
             //重新监听
             mSocket.BeginAccept(new AsyncCallback(AcceptCallBack), null);
         }
+
+
         private void ReceiveCallback(IAsyncResult ar)
         {
             try
@@ -310,6 +309,7 @@ namespace Model
             try
             {
                 mSocket.EndSendTo(ar);
+                
                 if (onSendTo != null)
                     onSendTo(mID, "OK");
             }

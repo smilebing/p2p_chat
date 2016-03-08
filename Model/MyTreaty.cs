@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Model
 {
+    [Serializable]
     public class MyTreaty
     {
         public int Type { get; set; }
@@ -29,15 +30,15 @@ namespace Model
             this.FileName = fileName;
         }
 
-        public MyTreaty(int type, string name, byte[] content, DateTime date, string fileName)
-        {
-            this.Type = type;
-            this.Name = name;
+        //public MyTreaty(int type, string name, byte[] content, DateTime date, string fileName)
+        //{
+        //    this.Type = type;
+        //    this.Name = name;
         
-            this.Content = content;
-            this.Date = date;
-            this.FileName = fileName;
-        }
+        //    this.Content = content;
+        //    this.Date = date;
+        //    this.FileName = fileName;
+        //}
     
  
 
