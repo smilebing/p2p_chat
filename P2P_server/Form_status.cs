@@ -33,10 +33,7 @@ namespace P2P_server
             CheckForIllegalCrossThreadCalls = false;
 
             conn = new OleDbConnection("provider=Microsoft.Jet.OLEDB.4.0;data source=" + exePath + @"\P2P_db.mdb");
-
-            //将工作项加入到线程池队列中，这里可以传递一个线程参数
-
-        
+   
         }
 
 
@@ -152,8 +149,6 @@ namespace P2P_server
         //开启监听
         private void button_listen_Click(object sender, EventArgs e)
         {
-           
-            //listener = new AsySocket("172.0.0.1", 6789);
             listener = new AsySocket("any", 6789);
             listener.OnAccept += new AcceptEventHandler(listener_OnAccept);
             listener.Listen(5);

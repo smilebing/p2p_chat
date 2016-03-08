@@ -35,7 +35,7 @@ namespace P2PChat
         {
             
 
-            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
+            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.21.125.130"), 6789);
             //连接
             socket = new AsySocket("any", 1234);
             //socket = new AsySocket("172.0.0.1", 0);
