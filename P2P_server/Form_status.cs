@@ -253,13 +253,13 @@ namespace P2P_server
                         //发送登录结果
                         if (access.insert(name, pwd) == true)
                         {
-                            clients.Values[i].ASend(1, "y", "", UTF8Encoding.UTF8.GetBytes("y"), DateTime.Now, "");
+                            clients.Values[i].ASend(0, "y", "", UTF8Encoding.UTF8.GetBytes("y"), DateTime.Now, "");
 
                             Console.WriteLine("server 发送注册结果 y");
                         }
                         else
                         {
-                            clients.Values[i].ASend(1, "n", "", UTF8Encoding.UTF8.GetBytes("n"), DateTime.Now, "");
+                            clients.Values[i].ASend(0, "n", "", UTF8Encoding.UTF8.GetBytes("n"), DateTime.Now, "");
 
                           
                             Console.WriteLine("server 发送注册结果 n");

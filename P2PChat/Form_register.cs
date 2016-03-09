@@ -10,13 +10,33 @@ using System.Windows.Forms;
 using System.Data.OleDb;
 using Model;
 using System.Net;
+using System.Net.Sockets;
 
 namespace P2PChat
 {
 
     public partial class Form_register : Form
     {
-      
+
+        //用来在窗口间传递 socket 
+        public AsySocket socket_parameter = null;
+
+        public AsySocket frm_parameter
+        {
+            get
+            {
+                return socket_parameter;
+            }
+            set
+            {
+                socket_parameter = value;
+            }
+        }
+
+
+
+
+
 
         public Form_register()
         {
@@ -27,6 +47,7 @@ namespace P2PChat
 
         //发送注册信息的socket
         private AsySocket socket = null;
+        Socket client_socket;
         //定义server ip 和 端口 
         private IPEndPoint server_ip_port;
         
@@ -35,23 +56,39 @@ namespace P2PChat
         {
             
             //服务器的地址
-            server_ip_port = new IPEndPoint(IPAddress.Parse("10.11.125.60"), 6789);
+            //server_ip_port = new IPEndPoint(IPAddress.Parse("10.11.125.60"), 6789);
             
-//            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
+            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
             //连接
-            socket = new AsySocket("any", 1234);
+            //socket = new AsySocket("any", 3456);
 
             //发送消息事件
-            socket.OnSended += new AsySocketEventHandler(socket_OnSended);
+            //socket.OnSended += new AsySocketEventHandler(socket_OnSended);
 
             //接收到socket 信息
-            socket.OnStreamDataAccept += new StreamDataAcceptHandler(socket_OnStreamDataAccept);
+            //socket.OnStreamDataAccept += new StreamDataAcceptHandler(socket_OnStreamDataAccept);
 
-            socket.OnClosed += new AsySocketClosedEventHandler(socket_OnClosed);
+            //socket.OnClosed += new AsySocketClosedEventHandler(socket_OnClosed);
 
             //连接server
-            socket.LinkObject.Connect(server_ip_port);
-            socket.BeginAcceptData();
+            //socket.LinkObject.Connect(server_ip_port);
+            //socket.BeginAcceptData();
+
+
+
+
+            //创建Socket并连接到服务器
+            client_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);   //  创建Socket 
+            try 
+            {
+                client_socket.Connect(server_ip_port);
+            }
+            catch (Exception ){
+                MessageBox.Show("无法连接服务器！");
+                this.Dispose();
+                this.Close();
+            }
+            
         }
 
         //注册button
@@ -74,13 +111,31 @@ namespace P2PChat
                 return;
             }
 
-            
-
-            MyTreaty register_msg=new MyTreaty(0,textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(),UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()),DateTime.Now,"");
 
             //发送注册信息
-            socket.ASend(0, textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(), UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()), DateTime.Now, "");
-            type = 0;
+            MyTreaty register_msg=new MyTreaty(0,textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(),UTF8Encoding.UTF8.GetBytes("register"),DateTime.Now,"");
+            client_socket.Send(register_msg.GetBytes(), register_msg.GetBytes().Length, 0);
+
+             byte[] recvBytes = new byte[1024];
+             client_socket.Receive(recvBytes, recvBytes.Length, 0);
+             MyTreaty receieve_msg = MyTreaty.GetMyTreaty(recvBytes);
+             Console.WriteLine(receieve_msg.Name);
+            if(receieve_msg.Name=="y")
+            {
+                MessageBox.Show("注册成功");
+                //  释放资源，关闭窗口
+                client_socket.Shutdown(SocketShutdown.Both);
+                this.Dispose();
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("注册失败");
+            }
+
+            
+           // socket.ASend(0, textBox_name.Text.Trim(),textBox_pwd1.Text.Trim(), UTF8Encoding.UTF8.GetBytes(textBox_pwd1.Text.Trim()), DateTime.Now, "");
+           // type = 0;
 
             textBox_name.Text = "";
             textBox_pwd1.Text = "";
@@ -88,9 +143,14 @@ namespace P2PChat
         }
 
         //关闭窗口
-        private void Form_register_FormClosed(object sender, FormClosedEventArgs e)
+        protected void Form_register_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Environment.Exit(0);
+           
+            client_socket.Close();
+            client_socket.Dispose();
+            this.Dispose();
+          
+           // Environment.Exit(0);
         }
 
 
@@ -219,6 +279,11 @@ namespace P2PChat
 
 
 
+        }
+
+        private void Form_register_FormClosing(object sender, FormClosingEventArgs e)
+        {
+           
         }
 
 

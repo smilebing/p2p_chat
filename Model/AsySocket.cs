@@ -236,6 +236,7 @@ namespace Model
         
         private void AcceptCallBack(IAsyncResult ar)
         {
+            Console.WriteLine("接收到一个新的连接");
             Socket handler = mSocket.EndAccept(ar);
             AsySocket NewSocket = new AsySocket(handler);
             //激发事件
@@ -274,6 +275,8 @@ namespace Model
             }
             catch (SocketException se)
             {
+                Console.WriteLine("socket yi chang ");
+                Console.WriteLine(se.Data);
                 if (onClosed != null)
                     onClosed(ID, se.Message);
             }
@@ -398,6 +401,12 @@ namespace Model
             }
         }
         #endregion
+
+
+        public void close_socket()
+        {
+            mSocket.Close();
+        }
     }
 }
 

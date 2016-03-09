@@ -13,9 +13,7 @@ namespace Model
         //创建连接对象
         public OleDbConnection conn { get; set; }
         
-        public OleDbCommand search_cmd;
-        public OleDbCommand update_cmd;
-        public OleDbCommand insert_cmd;
+
 
 
        /// <summary>
@@ -35,9 +33,7 @@ namespace Model
         public void openConn()
         {
             conn.Open();
-            search_cmd = conn.CreateCommand();
-            update_cmd = conn.CreateCommand();
-            insert_cmd = conn.CreateCommand();
+           
         }
 
         /// <summary>
@@ -57,6 +53,7 @@ namespace Model
        /// <returns>返回用户是否存在</returns>
         public bool search (string name,string pwd)
         {
+            OleDbCommand search_cmd = conn.CreateCommand();
             string sqlString = "select * from [user] where uname=@name and pwd=@pwd";
             search_cmd.CommandText = sqlString;
             search_cmd.Parameters.Add(new OleDbParameter("name", name));
@@ -73,6 +70,30 @@ namespace Model
             return false;
         }
 
+        /// <summary>
+        /// 查找用户是否存在
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="pwd"></param>
+        /// <returns></returns>
+        public bool search(string name)
+        {
+            OleDbCommand search_cmd = conn.CreateCommand();
+
+            string sqlString = "select * from [user] where uname=@name ";
+            search_cmd.CommandText = sqlString;
+            search_cmd.Parameters.Add(new OleDbParameter("name", name));
+
+            search_cmd.ExecuteScalar();
+            int i = Convert.ToInt32(search_cmd.ExecuteScalar());
+            if (i > 0)
+            {
+                //查询存在
+                return true;
+            }
+            return false;
+        }
+
 
         /// <summary>
         /// 插入新用户
@@ -82,13 +103,15 @@ namespace Model
         /// <returns>增加用户是否成功</returns>
         public bool insert(string name,string pwd)
         {
-            if(search(name,pwd)==true)
+            if(search(name)==true)
             {
                 return false;
             }
 
+            OleDbCommand insert_cmd = conn.CreateCommand();
 
-            string sqlString = "insert into [user] valuse(@name,@pwd)";
+
+            string sqlString = "insert into [user] (uname,pwd) values(@name,@pwd)";
             insert_cmd.CommandText = sqlString;
 
             insert_cmd.Parameters.Add(new OleDbParameter("name", name));
@@ -113,17 +136,20 @@ namespace Model
         /// <returns>更新是否成功</returns>
         public bool update(string name,string pwd)
         {
-          if(  search(name, pwd)==false)
+          if(  search(name)==false)
           {
               return false;
           }
 
-            string sqlString = "update [user] set pwd=@pwd where name=@name";
+          OleDbCommand update_cmd = conn.CreateCommand();
+
+
+            string sqlString = "update [user] set pwd=@pwd where uname=@name";
 
             update_cmd.CommandText = sqlString;
-
-            update_cmd.Parameters.Add(new OleDbParameter("name", name));
             update_cmd.Parameters.Add(new OleDbParameter("pwd", pwd));
+            update_cmd.Parameters.Add(new OleDbParameter("name", name));
+           
 
             int i = update_cmd.ExecuteNonQuery();
             if(i>0)

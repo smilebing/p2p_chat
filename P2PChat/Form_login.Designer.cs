@@ -44,6 +44,7 @@
             this.button_login.TabIndex = 0;
             this.button_login.Text = "login";
             this.button_login.UseVisualStyleBackColor = true;
+            this.button_login.Click += new System.EventHandler(this.button_login_Click);
             // 
             // button_register
             // 
@@ -100,6 +101,7 @@
             this.Controls.Add(this.button_login);
             this.Name = "Form_login";
             this.Text = "Form_login";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form_login_FormClosing);
             this.Load += new System.EventHandler(this.Form_login_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
