@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Model;
 
 namespace P2PChat
 {
@@ -16,9 +17,12 @@ namespace P2PChat
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new Form_login());
-            Application.Run(new Form_online_user());
+            Application.Run(new Form_login());
+           // Application.Run(new Form_online_user());
+
             
+
+
         }
     }
 }

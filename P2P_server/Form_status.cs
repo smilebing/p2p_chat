@@ -152,8 +152,10 @@ namespace P2P_server
         
         //定义一个异步传输的socket
         AsySocket listener = null;
+        //存储在线的用户
         SortedList<string, AsySocket> clients = new SortedList<string, AsySocket>();
 
+        SortedList<string, AsySocket> online_clients = new SortedList<string, AsySocket>();
 
 
         //开启监听
@@ -187,7 +189,8 @@ namespace P2P_server
 
 
         //接收client发送过来的 MyTreaty
-        void AcceptedSocket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
+        //void AcceptedSocket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
+       void AcceptedSocket_OnStreamDataAccept(AsySocket accept_socket, MyTreaty AcceptData)   
         {  
             //文本 type=6
             //图片 type=7
@@ -196,13 +199,29 @@ namespace P2P_server
             string name = AcceptData.Name;
             string pwd = AcceptData.Pwd;
 
-            if (AcceptData.Type == 1)//用户登录
+            if(AcceptData.Type==8) //心跳包
+            {
+                //将用户名 存储到 list 中 
+                    if(online_clients.ContainsKey(name)==false)
+                    {
+                        //添加在线user
+                        online_clients.Add(name, accept_socket);
+                    }
+                    else
+                    {
+                        //更新 accept__data                
+                        online_clients                                       .Values[ online_clients.IndexOfKey(name)] = accept_socket;
+                    }
+
+
+            }
+            else if (AcceptData.Type == 1)//用户登录
             {
                
                 //查找socket
                 for(int i=0;i<clients.Count;i++)
                 {
-                    if (clients.Values[i].ID == AccepterID)
+                    if (clients.Values[i].ID == name)
                     {
                         Console.WriteLine("登录 比对id");
                         //发送登录结果
@@ -248,7 +267,7 @@ namespace P2P_server
                 {
                     Console.WriteLine("注册 比对id");
 
-                    if (clients.Values[i].ID == AccepterID)
+                    if (clients.Values[i].ID == name)
                     {
                         //发送登录结果
                         if (access.insert(name, pwd) == true)

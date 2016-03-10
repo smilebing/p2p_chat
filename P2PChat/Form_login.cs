@@ -106,6 +106,8 @@ namespace P2PChat
             {
                 MessageBox.Show("登录成功");
                 Form_online_user form_online_user = new Form_online_user();
+                //传递用户名
+                form_online_user.user_name = textBox_name.Text.Trim();
                 form_online_user.Show();
 
                 login_socket.Shutdown(SocketShutdown.Both);

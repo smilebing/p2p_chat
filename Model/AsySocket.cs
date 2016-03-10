@@ -10,7 +10,9 @@ using System.Threading;
 
 namespace Model
 { 
-    public delegate void StreamDataAcceptHandler(string AccepterID, MyTreaty AcceptData);
+    //public delegate void StreamDataAcceptHandler(string AccepterID, MyTreaty AcceptData);
+    public delegate void StreamDataAcceptHandler(AsySocket accept_socket, MyTreaty AcceptData);
+    
     public delegate void AsySocketEventHandler(string SenderID, string EventMessage);
     public delegate void AcceptEventHandler(AsySocket AcceptedSocket);
     public delegate void AsySocketClosedEventHandler(string SocketID, string ErrorMessage);
@@ -269,8 +271,12 @@ namespace Model
                     // Get the rest of the data.
                     mSocket.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
                     MyTreaty my = MyTreaty.GetMyTreaty(state.buffer);
-                    if (onStreamData != null)
-                        onStreamData(mID, my);
+                    //if (onStreamData != null)
+                    //{
+                    //    //onStreamData(mID, my);
+                    //    onStreamData(my.Name, my);
+                    //    Console.WriteLine(my.Name);
+                    //}
                 }
             }
             catch (SocketException se)
