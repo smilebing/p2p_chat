@@ -19,9 +19,7 @@ namespace Model
    
     
     
-    class MySocket
-    {
-    }
+   
 
     public class StateObject
     {

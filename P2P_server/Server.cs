@@ -21,17 +21,18 @@ namespace P2P_server
         Thread thrRecv;
 
         //开启服务 传递端口值,返回是否启动成功
-        private bool start_server(int prot=12304)
+        private bool start_server(int prot=8852)
         {
-            //listen
+            if(listen())
+            {
+                return true;
+            }
             return false;
         }
 
 
         //监听
-        //public bool listen(int mprot,string mip)
         public bool listen()
-        
         {
    
 
