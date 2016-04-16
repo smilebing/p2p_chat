@@ -158,15 +158,7 @@ namespace P2P_server
         SortedList<string, AsySocket> online_clients = new SortedList<string, AsySocket>();
 
 
-        //开启监听
-        private void button_listen_Click(object sender, EventArgs e)
-        {
-            listener = new AsySocket("any", 6789);
-            listener.OnAccept += new AcceptEventHandler(listener_OnAccept);
-            listener.Listen(5);
-            button_listen.Enabled = false;
-
-        }
+    
 
 
         /// <summary>
@@ -376,6 +368,38 @@ namespace P2P_server
             Form_Access_test t = new Form_Access_test();
             t.Show();
         }
+
+
+        //用于监听的udpSocket
+        MyUdpSocket listenUdpSocket;
+        //开启监听
+        private void button_listen_Click(object sender, EventArgs e)
+        {
+            listenUdpSocket = new MyUdpSocket(6776);
+            listenUdpSocket.listen();
+
+
+            listener = new AsySocket("any", 6789);
+            listener.OnAccept += new AcceptEventHandler(listener_OnAccept);
+            listener.Listen(5);
+            button_listen.Enabled = false;
+
+        }
+
+        //关闭服务
+        private void button_close_server_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+        //接收到信息处理的函数
+        private void arrivedHandle(StatuSocket arriveStatu)
+        {
+            listenUdpSocket.send()
+        }
+
+        //发送信息的函数
 
     
     

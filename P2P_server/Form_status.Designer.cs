@@ -32,11 +32,12 @@
             this.lstMsg = new System.Windows.Forms.ListView();
             this.lstUser = new System.Windows.Forms.ListBox();
             this.button1 = new System.Windows.Forms.Button();
+            this.button_close_server = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button_listen
             // 
-            this.button_listen.Location = new System.Drawing.Point(417, 328);
+            this.button_listen.Location = new System.Drawing.Point(295, 328);
             this.button_listen.Name = "button_listen";
             this.button_listen.Size = new System.Drawing.Size(75, 23);
             this.button_listen.TabIndex = 0;
@@ -74,11 +75,22 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // button_close_server
+            // 
+            this.button_close_server.Location = new System.Drawing.Point(479, 328);
+            this.button_close_server.Name = "button_close_server";
+            this.button_close_server.Size = new System.Drawing.Size(75, 23);
+            this.button_close_server.TabIndex = 20;
+            this.button_close_server.Text = "关闭服务";
+            this.button_close_server.UseVisualStyleBackColor = true;
+            this.button_close_server.Click += new System.EventHandler(this.button_close_server_Click);
+            // 
             // Form_status
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(740, 388);
+            this.Controls.Add(this.button_close_server);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.lstUser);
             this.Controls.Add(this.lstMsg);
@@ -97,6 +109,7 @@
         private System.Windows.Forms.ListView lstMsg;
         private System.Windows.Forms.ListBox lstUser;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button_close_server;
     }
 }
 
