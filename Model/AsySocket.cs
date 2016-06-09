@@ -9,16 +9,18 @@ using System.Threading;
 
 
 namespace Model
-{ 
+{
     //public delegate void StreamDataAcceptHandler(string AccepterID, MyTreaty AcceptData);
     public delegate void StreamDataAcceptHandler(AsySocket accept_socket, MyTreaty AcceptData);
-    
+
     public delegate void AsySocketEventHandler(string SenderID, string EventMessage);
+    //public delegate void AsySocketEventHandler(AsySocket sender_socket, string EventMessage);
+
     public delegate void AcceptEventHandler(AsySocket AcceptedSocket);
     public delegate void AsySocketClosedEventHandler(string SocketID, string ErrorMessage);
-   
-    
-    
+
+
+
     class MySocket
     {
     }
@@ -66,30 +68,49 @@ namespace Model
         public AsySocket(string LocalIP, int LocalPort)
         {
             mSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-           
 
             try
             {
                 //IPAddress ip = Dns.GetHostAddresses(LocalIP)[0];
                 IPAddress ip;
-                if (string.Compare(LocalIP, "any") == 0)
+                ip = IPAddress.Any;
+                IPEndPoint ipe = new IPEndPoint(ip, LocalPort);
+
+                if (string.Compare(LocalIP, "client") == 0)
                 {
-                    ip = IPAddress.Any;
+                    //client 不用bind ？
                 }
                 else
                 {
-                    ip = IPAddress.Parse(LocalIP);
+                    //ip = IPAddress.Parse(LocalIP);
                 }
-                IPEndPoint ipe = new IPEndPoint(ip, LocalPort);
-                mID = Guid.NewGuid().ToString();
                 mSocket.Bind(ipe);
+
+                mID = Guid.NewGuid().ToString();
             }
             catch (Exception e)
             {
                 Console.WriteLine("构造socket 出错!");
                 Console.WriteLine(e.Message);
-
             }
+        }
+
+        public void connect(IPEndPoint ip)
+        {
+            try
+            {
+                mSocket.BeginConnect(ip, new AsyncCallback(ConnectCallback), mSocket);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("AsySocket connect()  error----");
+                Console.WriteLine(e.Message);
+            }
+
+        }
+        private static void ConnectCallback(IAsyncResult ar)
+        {
+
         }
         /// <summary>
         /// 
@@ -154,6 +175,7 @@ namespace Model
 
             mSocket.Listen(backlog);
             mSocket.BeginAccept(new AsyncCallback(AcceptCallBack), null);//异步
+
         }
         /// <summary>
         /// 开始接受数据
@@ -183,13 +205,13 @@ namespace Model
             mSocket.BeginSend(SendData, 0, SendData.Length, 0, new AsyncCallback(SendCallBack), mSocket);
             //sendDone.WaitOne();
         }
-        public void ASend(int Type, string Name,string Pwd, byte[] Content, DateTime date, string fileName)
+        public void ASend(int Type, string Name, string Pwd, byte[] Content, DateTime date, string fileName)
         {
             if (mSocket == null)
                 throw new ArgumentNullException("连接不存在");
             if (Content == null)
                 return;
-            MyTreaty my = new MyTreaty(Type, Name,Pwd ,Content, date, fileName);
+            MyTreaty my = new MyTreaty(Type, Name, Pwd, Content, date, fileName);
             byte[] SendData = my.GetBytes();
             mSocket.BeginSend(SendData, 0, SendData.Length, 0, new AsyncCallback(SendCallBack), mSocket);
 
@@ -217,8 +239,11 @@ namespace Model
             if (SendData == null)
                 return;
             //用beginSendTo 直接将消息发送给指定 IPEndPoint
-            mSocket.BeginSendTo(SendData, 0, SendData.Length, 0, EndPoint, new AsyncCallback(SendToCallBack), null);
-            
+            mSocket.BeginSendTo(SendData, 0, SendData.Length, 0, EndPoint, new AsyncCallback(SendToCallBack), mSocket);
+
+            //BeginSendTo(buff, 0, buff.Length, 0, lep, new AsyncCallback(Async_Send_Receive.SendTo_Callback), s);
+
+            //allDone.WaitOne();
             //sendToDone.WaitOne();
         }
         /// <summary>
@@ -232,10 +257,18 @@ namespace Model
                 return;
             ASendTo(UTF8Encoding.UTF8.GetBytes(SendData), EndPoint);
         }
+
+
+        //获取ip 和 port
+        public IPEndPoint get_ipEndPoint()
+        {
+            return (IPEndPoint)mSocket.RemoteEndPoint;
+        }
+
         #endregion
 
         #region 私有方法
-        
+
         private void AcceptCallBack(IAsyncResult ar)
         {
             Console.WriteLine("接收到一个新的连接");
@@ -300,6 +333,7 @@ namespace Model
                 mSocket.EndSend(ar);
                 //触发事件
                 if (onSended != null)
+                    //onSended(mID, "OK");
                     onSended(mID, "OK");
             }
             catch (SocketException se)
@@ -318,7 +352,7 @@ namespace Model
             try
             {
                 mSocket.EndSendTo(ar);
-                
+
                 if (onSendTo != null)
                     onSendTo(mID, "OK");
             }
@@ -421,5 +455,5 @@ namespace Model
 
 
 
- 
+
 

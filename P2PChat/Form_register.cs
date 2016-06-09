@@ -17,6 +17,16 @@ namespace P2PChat
 
     public partial class Form_register : Form
     {
+        string serverIp = "10.211.55.7";
+
+        //用来统一资源的socket
+        private AsySocket signalSocket;
+        public AsySocket SignalSocket
+        {
+            get { return signalSocket; }
+            set { signalSocket = value; }
+        }
+
 
         //用来在窗口间传递 socket 
         public AsySocket socket_parameter = null;
@@ -57,8 +67,8 @@ namespace P2PChat
             
             //服务器的地址
             //server_ip_port = new IPEndPoint(IPAddress.Parse("10.11.125.60"), 6789);
-            
-            server_ip_port=  new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
+            Console.WriteLine("form register load ---------");
+            server_ip_port=  new IPEndPoint(IPAddress.Parse(serverIp), 6789);
             //连接
             //socket = new AsySocket("any", 3456);
 
@@ -118,6 +128,7 @@ namespace P2PChat
 
              byte[] recvBytes = new byte[1024];
              client_socket.Receive(recvBytes, recvBytes.Length, 0);
+
              MyTreaty receieve_msg = MyTreaty.GetMyTreaty(recvBytes);
              Console.WriteLine(receieve_msg.Name);
             if(receieve_msg.Name=="y")

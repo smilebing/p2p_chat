@@ -17,6 +17,102 @@ using System.IO;
 
 namespace P2P_server
 {
+    //存储udp state
+    public class UdpState
+    {
+        public UdpClient udpClient;
+        public IPEndPoint ipEndPoint;
+        public const int BufferSize = 1024;
+        public byte[] buffer = new byte[BufferSize];
+        public int counter = 0;
+    }
+
+
+      public class AsyncUdpSever
+    {
+        private IPEndPoint ipEndPoint = null;
+        private IPEndPoint remoteEP = null;
+        private UdpClient udpReceive = null;
+        private UdpClient udpSend = null;
+        private const int listenPort = 1100;
+        private const int remotePort = 1101;
+        UdpState udpReceiveState = null;
+        UdpState udpSendState = null;
+        private ManualResetEvent sendDone = new ManualResetEvent(false);
+        private ManualResetEvent receiveDone = new ManualResetEvent(false);
+        public AsyncUdpSever()
+        {
+            ipEndPoint = new IPEndPoint(IPAddress.Any, listenPort);
+            remoteEP = new IPEndPoint(Dns.GetHostAddresses(Dns.GetHostName())[0], remotePort);
+            udpReceive = new UdpClient(ipEndPoint);
+            udpSend = new UdpClient();
+            udpReceiveState = new UdpState();            
+            udpReceiveState.udpClient = udpReceive;
+            udpReceiveState.ipEndPoint = ipEndPoint;
+
+            udpSendState = new UdpState();
+            udpSendState.udpClient = udpSend;
+            udpSendState.ipEndPoint = remoteEP;
+        }
+        public void ReceiveMsg()
+        {
+            Console.WriteLine("listening for messages");
+            while(true)
+            {
+                lock (this)
+                {   
+                    IAsyncResult iar = udpReceive.BeginReceive(new AsyncCallback(ReceiveCallback), udpReceiveState);
+                    receiveDone.WaitOne();
+                    Thread.Sleep(100);
+                }
+            }
+        }
+        private void ReceiveCallback(IAsyncResult iar)
+        {
+            UdpState udpReceiveState = iar.AsyncState as UdpState;
+            if (iar.IsCompleted)
+            {
+                Byte[] receiveBytes = udpReceiveState.udpClient.EndReceive(iar, ref udpReceiveState.ipEndPoint);
+                string receiveString = Encoding.ASCII.GetString(receiveBytes);
+                Console.WriteLine("Received: {0}", receiveString);
+                //Thread.Sleep(100);
+                receiveDone.Set();
+                SendMsg();
+            }
+        }
+
+        private void SendMsg()
+        {
+            udpSend.Connect(udpSendState.ipEndPoint);
+            udpSendState.udpClient = udpSend;
+            udpSendState.counter ++;
+
+            string message = string.Format("第{0}个UDP请求处理完成！",udpSendState.counter);
+            Byte[] sendBytes = Encoding.Unicode.GetBytes(message);
+            udpSend.BeginSend(sendBytes, sendBytes.Length, new AsyncCallback(SendCallback), udpSendState);
+            sendDone.WaitOne();
+        }
+        private void SendCallback(IAsyncResult iar)
+        {
+            UdpState udpState = iar.AsyncState as UdpState;
+            Console.WriteLine("第{0}个请求处理完毕！", udpState.counter);
+            Console.WriteLine("number of bytes sent: {0}", udpState.udpClient.EndSend(iar));
+            sendDone.Set();
+        }
+
+        //public static void Main()
+        //{
+        //    AsyncUdpSever aus = new AsyncUdpSever();
+        //    Thread t = new Thread(new ThreadStart(aus.ReceiveMsg));
+        //    t.Start();
+        //    Console.Read();
+        //}
+    }
+
+
+    //the original 
+
+
     public partial class Form_status : Form
     {
         static DirectoryInfo dir = new DirectoryInfo(Application.StartupPath).Parent.Parent.Parent;
@@ -29,6 +125,9 @@ namespace P2P_server
         OleDbConnection conn;
         Access access;
 
+
+
+        UdpClient serverUdp = new UdpClient(1234);
 
         public Form_status()
         {
@@ -51,102 +150,12 @@ namespace P2P_server
         private void Form_status_FormClosed(object sender, FormClosedEventArgs e)
         {
             access.closeConn();
+            serverUdp.Close();
         }
 
 
 
 
-
-        //判断端口号能否使用
-        private int getValidPort(string port)
-        {
-            int lport;
-            //测试端口号是否有效  
-            try
-            {
-                //是否为空  
-                if (port == "")
-                {
-                    throw new ArgumentException(
-                        "端口号无效，不能启动DUP");
-                }
-                lport = System.Convert.ToInt32(port);
-            }
-            catch (Exception e)
-            {
-                //ArgumentException,   
-                //FormatException,   
-                //OverflowException  
-                Console.WriteLine("无效的端口号：" + e.ToString());
-                //this.tbMsg.AppendText("无效的端口号：" + e.ToString() + "\n");
-                return -1;
-            }
-            return lport;
-        }
-
-
-        //判断ip 是否可用
-        private IPAddress getValidIP(string ip)
-        {
-            IPAddress lip = null;
-            //测试IP是否有效  
-            try
-            {
-                //是否为空  
-                if (!IPAddress.TryParse(ip, out lip))
-                {
-                    throw new ArgumentException(
-                        "IP无效，不能启动DUP");
-                }
-            }
-            catch (Exception e)
-            {
-                //ArgumentException,   
-                //FormatException,   
-                //OverflowException  
-                Console.WriteLine("无效的IP：" + e.ToString());
-                //this.tbMsg.AppendText("无效的IP：" + e.ToString() + "\n");
-                return null;
-            }
-            return lip;
-        }  
-
-
-
-        private void server(object da)
-        {
-            int recv;
-            byte[] data = new byte[1024];
-
-            //得到本机IP，设置TCP端口号           
-            IPEndPoint ip = new IPEndPoint(IPAddress.Any, 8001);
-            Socket newsock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            //绑定网络地址  
-            newsock.Bind(ip);
-            Console.WriteLine("This is a Server, host name is {0}", Dns.GetHostName());
-            //等待客户机连接  
-            Console.WriteLine("Waiting for a client");
-            //得到客户机IP  
-            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-            EndPoint Remote = (EndPoint)(sender);
-            recv = newsock.ReceiveFrom(data, ref Remote);
-            Console.WriteLine("Message received from {0}: ", Remote.ToString());
-            Console.WriteLine(Encoding.ASCII.GetString(data, 0, recv));
-            //客户机连接成功后，发送信息  
-            string welcome = "你好 ! ";
-            //字符串与字节数组相互转换  
-            data = Encoding.ASCII.GetBytes(welcome);
-            //发送信息  
-            newsock.SendTo(data, data.Length, SocketFlags.None, Remote);
-            while (true)
-            {
-                data = new byte[1024];
-                //发送接受信息  
-                recv = newsock.ReceiveFrom(data, ref Remote);
-                Console.WriteLine(Encoding.ASCII.GetString(data, 0, recv));
-                newsock.SendTo(data, recv, SocketFlags.None, Remote);
-            }  
-        }
 
 
         
@@ -155,16 +164,19 @@ namespace P2P_server
         //存储在线的用户
         SortedList<string, AsySocket> clients = new SortedList<string, AsySocket>();
 
-        SortedList<string, AsySocket> online_clients = new SortedList<string, AsySocket>();
+        SortedList<string, IPEndPoint> online_clients = new SortedList<string, IPEndPoint>();
 
 
         //开启监听
         private void button_listen_Click(object sender, EventArgs e)
         {
-            listener = new AsySocket("any", 6789);
-            listener.OnAccept += new AcceptEventHandler(listener_OnAccept);
-            listener.Listen(5);
-            button_listen.Enabled = false;
+            serverUdp.BeginReceive(new AsyncCallback(ReceiveCallback), null);
+        
+
+            //listener = new AsySocket("any", 6789);
+            //listener.OnAccept += new AcceptEventHandler(listener_OnAccept);
+            //listener.Listen(5);
+            //button_listen.Enabled = false;
 
         }
 
@@ -181,10 +193,10 @@ namespace P2P_server
             AcceptedSocket.OnStreamDataAccept += new StreamDataAcceptHandler(AcceptedSocket_OnStreamDataAccept);
             AcceptedSocket.BeginAcceptData();
             //加入
-            AddMsg("", AcceptedSocket.ID);
-            AddMsg(string.Format("{0}上线！", AcceptedSocket.ID), "");
+            //AddMsg("", AcceptedSocket.ID);
+            //AddMsg(string.Format("{0}上线！", AcceptedSocket.ID), "");
 
-            clients.Add(AcceptedSocket.ID, AcceptedSocket);
+            //clients.Add(AcceptedSocket.ID, AcceptedSocket);
         }
 
 
@@ -201,23 +213,29 @@ namespace P2P_server
 
             if(AcceptData.Type==8) //心跳包
             {
-                //将用户名 存储到 list 中 
+                    //将用户名 存储到 list 中 
                     if(online_clients.ContainsKey(name)==false)
                     {
                         //添加在线user
-                        online_clients.Add(name, accept_socket);
+                       
+                        online_clients.Add(name, accept_socket.get_ipEndPoint());
+                        AddMsg(string.Format("{0}上线！",name), "");
+                       
                     }
                     else
                     {
-                        //更新 accept__data                
-                        online_clients                                       .Values[ online_clients.IndexOfKey(name)] = accept_socket;
+                        //更新 accept__data        
+                        online_clients.Values[ online_clients.IndexOfKey(name)] = accept_socket.get_ipEndPoint();
                     }
 
+
+                    EndPoint endPoint= accept_socket.get_ipEndPoint();
+                    Console.WriteLine(endPoint.ToString());
 
             }
             else if (AcceptData.Type == 1)//用户登录
             {
-               
+            //    accept_socket.ASend(1, "yasd", "", UTF8Encoding.UTF8.GetBytes("yasdf"), DateTime.Now, "");
                 //查找socket
                 for(int i=0;i<clients.Count;i++)
                 {
@@ -377,7 +395,100 @@ namespace P2P_server
             t.Show();
         }
 
-    
-    
+
+        #region call back
+        UdpClient udpserver = new UdpClient(1234);
+        IPEndPoint ipendpoint = new IPEndPoint(IPAddress.Any, 0);
+        public  void ReceiveCallback(IAsyncResult ar)
+        {
+            UdpState udpReceiveState = ar.AsyncState as UdpState;
+            if (ar.IsCompleted)
+            {
+                Byte[] receiveBytes = udpReceiveState.udpClient.EndReceive(ar, ref udpReceiveState.ipEndPoint);
+                MyTreaty my = MyTreaty.GetMyTreaty(receiveBytes);
+                //接收完数据，进行数据判断回复
+                readMsg(udpReceiveState, my);
+               // string receiveString = Encoding.ASCII.GetString(receiveBytes);
+                //Console.WriteLine("Received: {0}", receiveString);
+                //Thread.Sleep(100);
+                //receiveDone.Set();
+                //SendMsg();
+            }
+        }
+
+        public void ReceiveMsg()
+        {
+            Console.WriteLine("listening for messages");
+            while (true)
+            {
+                lock (this)
+                {
+                    IAsyncResult ar = udpserver.BeginReceive(new AsyncCallback(ReceiveCallback), udpserver);
+                }
+            }
+        }
+
+
+        public static void SendCallback(IAsyncResult ar)
+        {
+
+        }
+
+
+        #endregion
+
+
+        #region msg判断函数
+        public void readMsg(UdpState udpstate,MyTreaty mytreaty)
+        {
+             //文本 type=6
+            //图片 type=7
+            //注册 type=2 
+            //登录 type=1
+            string name = mytreaty.Name;
+            string pwd = mytreaty.Pwd;
+
+            if (mytreaty.Type == 8) //心跳包
+            {
+                //更新心跳包
+            }
+            if(mytreaty.Type==1) //login
+            {
+                //验证密码
+            }
+
+            if(mytreaty.Type==2) //register
+            {
+                //注册
+                Console.WriteLine("收到注册信息：" + name + "   " + pwd);
+                //是否已经注册
+                if(access.search(name)==false)
+                {
+                    //尚未注册
+                    if(access.insert(name, pwd)==true)
+                    {
+                        //注册成功
+                        MyTreaty msg = new MyTreaty(2, "", "", UTF8Encoding.UTF8.GetBytes("success"), DateTime.Now, "");
+                        udpserver.SendAsync(msg.GetBytes(), msg.GetBytes().Count(), udpstate.ipEndPoint);
+                    }
+                    else
+                    {
+                        //失败
+                        MyTreaty msg = new MyTreaty(2, "", "", UTF8Encoding.UTF8.GetBytes("fail"), DateTime.Now, "");
+                        udpserver.SendAsync(msg.GetBytes(), msg.GetBytes().Count(), udpstate.ipEndPoint); 
+                    }
+                    //注册结果反馈
+                }
+                else
+                {
+                    //已经注册，返回失败信息
+                    MyTreaty msg = new MyTreaty(2, "", "", UTF8Encoding.UTF8.GetBytes("exist"), DateTime.Now,"");
+                    udpserver.SendAsync(msg.GetBytes(), msg.GetBytes().Count(), udpstate.ipEndPoint);
+                }
+               
+            }
+        }
+
+        #endregion
     }
 }

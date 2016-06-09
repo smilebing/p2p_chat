@@ -15,64 +15,65 @@ namespace P2PChat
 {
     public partial class Form_login : Form
     {
+        string serverIp = "10.211.55.7";
+
+        //用来统一资源的socket
+        private AsySocket signalSocket;
+        public AsySocket SignalSocket
+        {
+            get { return signalSocket;}
+            set {signalSocket=value;}
+        }
+
+        private Form_online_user form_online_user;
+        public Form_online_user form_Online_user
+        {
+            get { return form_online_user; }
+            set { form_online_user = value; }
+        }
+
+        private Form_register register;
+        public Form_register form_register
+        {
+            get { return register; }
+            set { register = value; }
+        }
+
+
+
         public Form_login()
         {
             InitializeComponent();
         }
 
 
-         Socket login_socket  = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);   //  创建Socket 
         
         int type = 0;
-        //发送注册信息的socket
-        private AsySocket socket = null;
-        //定义server ip 和 端口 
+         //定义server ip 和 端口 
         private IPEndPoint server_ip_port;
 
         //窗体加载
         private void Form_login_Load(object sender, EventArgs e)
         {
             //服务器的地址
-            //server_ip_port = new IPEndPoint(IPAddress.Parse("10.11.125.60"), 6789);
-
-            server_ip_port = new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
-            socket = new AsySocket("any", 1234);
+            server_ip_port = new IPEndPoint(IPAddress.Parse(serverIp), 6789);
 
             //发送消息事件
-            socket.OnSended += new AsySocketEventHandler(socket_OnSended);
+            signalSocket.OnSended += new AsySocketEventHandler(socket_OnSended);
 
             //接收到socket 信息
-            socket.OnStreamDataAccept += new StreamDataAcceptHandler(socket_OnStreamDataAccept);
+            signalSocket.OnStreamDataAccept += new StreamDataAcceptHandler(socket_OnStreamDataAccept);
 
-            socket.OnClosed += new AsySocketClosedEventHandler(socket_OnClosed);
+            signalSocket.OnClosed += new AsySocketClosedEventHandler(socket_OnClosed);
 
-            //连接server
-            //socket.LinkObject.Connect(server_ip_port);
-            //socket.BeginAcceptData();
-
-            server_ip_port = new IPEndPoint(IPAddress.Parse("10.211.55.7"), 6789);
-
-            try
-            {
-                //尝试连接 server
-                login_socket.Connect(server_ip_port);
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                MessageBox.Show("无法连接服务器！");
-                return;
-            }
         }
 
 
         //注册button
         private void button_register_Click(object sender, EventArgs e)
         {
-            Form_register form_register = new Form_register();
-            form_register.Show();
-           
+            register.SignalSocket = signalSocket;
+            register.Show();           
         }
 
         
@@ -80,6 +81,22 @@ namespace P2PChat
         //登录 button
         private void button_login_Click(object sender, EventArgs e)
         {
+            
+            try
+            {
+                //signalSocket.connect(server_ip_port);
+                //尝试连接 server
+                signalSocket.Listen(5);
+                signalSocket.connect(server_ip_port);
+                //signalSocket.BeginAcceptData();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                MessageBox.Show("无法连接服务器！");
+                return;
+            }
+
             if(textBox_name.Text.Trim()=="")
             {
                 MessageBox.Show("请输入name");
@@ -95,32 +112,12 @@ namespace P2PChat
            //
            
            byte[] recvBytes = new byte[1024];
- 
-        
-            login_socket.Send(login_msg.GetBytes(), login_msg.GetBytes().Length, 0);
 
+           Console.WriteLine("prepare to use Asnedto---");
+            //发送登录信息
+          // signalSocket.ASend(login_msg.GetBytes());
+            signalSocket.ASendTo(login_msg.GetBytes(), server_ip_port);
 
-            login_socket.Receive(recvBytes, recvBytes.Length, 0);
-            MyTreaty receieve_msg = MyTreaty.GetMyTreaty(recvBytes);
-            if(receieve_msg.Name=="y")
-            {
-                MessageBox.Show("登录成功");
-                Form_online_user form_online_user = new Form_online_user();
-                //传递用户名
-                form_online_user.user_name = textBox_name.Text.Trim();
-                form_online_user.Show();
-
-                login_socket.Shutdown(SocketShutdown.Both);
-                login_socket.Close();
-                this.Hide();
-            }
-            else
-            {
-                MessageBox.Show("登录失败");
-            }
-
-            //login_socket.Shutdown(SocketShutdown.Both);
-            //login_socket.Close();
         }
 
 
@@ -129,64 +126,26 @@ namespace P2PChat
         /// </summary>
         /// <param name="AccepterID"></param>
         /// <param name="AcceptData"></param>
-        void socket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
+        void socket_OnStreamDataAccept(AsySocket accept_socket, MyTreaty AcceptData)
         {
             string result = AcceptData.Name;
             Console.WriteLine("client 收到信息 ");
 
             if (AcceptData.Type == 1)//登录结果
             {
+                Console.WriteLine(result);
                 if (result == "y")
                 {
                     MessageBox.Show("登录成功");
                     //建立在线用户窗体
+                    //form_online_user.Show();
+                    //this.Hide();
+
                 }
                 else
                 {
                     MessageBox.Show("登录失败");
                 }
-            }
-            else if (AcceptData.Type == 0)
-            {
-                if (result == "y")
-                {
-                    MessageBox.Show("注册成功");
-                }
-                else
-                {
-                    MessageBox.Show("注册失败");
-                }
-                //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
-                //AddMsg(msg);
-                //picBox.Image = Image.FromStream(new MemoryStream(AcceptData.Content));
-            }
-            else
-            {
-                string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "名叫：" + AcceptData.FileName + "的文件";
-                if (MessageBox.Show(msg + "，是否接收", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK)
-                {
-
-                    //try
-                    //{
-
-                    //    sFD.Filter = AcceptData.FileName + " | *." + Path.GetExtension(AcceptData.FileName);
-
-                    //    if (sFD.ShowDialog() == DialogResult.OK)
-                    //    {
-                    //        FileStream fs = new FileStream(sFD.FileName, FileMode.Create, FileAccess.Write);
-                    //        fs.Write(AcceptData.Content, 0, Convert.ToInt32(AcceptData.Content.Length));
-                    //        fs.Close();
-                    //        AddMsg(msg);
-                    //    }
-
-                    //}
-                    //catch (Exception)
-                    //{
-
-                    //    throw;
-                    //}
-                }
-
             }
         }
 

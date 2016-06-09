@@ -15,6 +15,17 @@ namespace P2PChat
 {
     public partial class Form_online_user : Form
     {
+
+        string serverIp = "10.211.55.7";
+        //用来统一资源的socket
+        private AsySocket signalSocket;
+        public AsySocket SignalSocket
+        {
+            get { return signalSocket; }
+            set { signalSocket = value; }
+        }
+
+
       // 每3s 发送心跳包
 
         AsySocket socket = null;
@@ -64,6 +75,8 @@ namespace P2PChat
         //
         private void Form_online_user_Load(object sender, EventArgs e)
         {
+            Console.WriteLine("form online user load ---------");
+
             root.Text = "在线用户";
             treeView_user.Nodes.Add(root);
            
@@ -71,7 +84,7 @@ namespace P2PChat
 
             //socket
             //服务器的地址
-            server_ip_port = new IPEndPoint(IPAddress.Parse("10.211.5.7"), 6789);
+            server_ip_port = new IPEndPoint(IPAddress.Parse(serverIp), 6789);
             socket = new AsySocket("any", 3456);
 
             //发送消息事件
@@ -130,12 +143,19 @@ namespace P2PChat
         /// </summary>
         /// <param name="AccepterID"></param>
         /// <param name="AcceptData"></param>
-        void socket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
+        //void socket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
+        void socket_OnStreamDataAccept(AsySocket accept_socket, MyTreaty AcceptData)   
         {
             string result = AcceptData.Name;
             Console.WriteLine("client 收到信息 ");
 
-            if (AcceptData.Type == 1)//登录结果
+            //type = 8 heart的反馈 包含在线用户
+            if(AcceptData.Type==8)
+            {
+                //心跳包
+                 
+            }
+            else    if (AcceptData.Type == 1)//登录结果
             {
                 if (result == "y")
                 {
