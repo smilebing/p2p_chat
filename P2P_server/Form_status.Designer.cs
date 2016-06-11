@@ -103,10 +103,6 @@
 
         }
 
-        private void button_close_server_Click(object sender, System.EventArgs e)
-        {
-            throw new System.NotImplementedException();
-        }
 
         #endregion
 
