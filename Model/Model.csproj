@@ -42,9 +42,12 @@
     <Compile Include="Access.cs" />
     <Compile Include="AES.cs" />
     <Compile Include="AsySocket.cs" />
+    <Compile Include="Client_statue.cs" />
     <Compile Include="MyTreaty.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RSA.cs" />
+    <Compile Include="SingletonClient.cs" />
+    <Compile Include="SingletonServer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

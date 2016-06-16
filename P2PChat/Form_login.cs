@@ -16,46 +16,19 @@ namespace P2PChat
 {
     public partial class Form_login : Form
     {
+        //单例模式
+        public static Form_login instance;
         static string  serverIp = "127.0.0.1";
-        UdpClient udpclient = new UdpClient(2345);
-        IPEndPoint udpServerIp = new IPEndPoint(IPAddress.Parse(serverIp), 1234);
-        //存储udp state
-        public class UdpState
-        {
-            public UdpClient udpClient;
-            public IPEndPoint ipEndPoint;
-            public const int BufferSize = 1024;
-            public byte[] buffer = new byte[BufferSize];
-            public int counter = 0;
-        }
 
+        UdpClient udpclient = SingletonClient.getUdpClient();
+        IPEndPoint udpServerIp = new IPEndPoint(IPAddress.Parse(serverIp), 1234);
+
+       
 
         #region call back
-        //UdpClient udpserver = new UdpClient(1234);
         IPEndPoint ipendpoint = new IPEndPoint(IPAddress.Any, 0);
-        public void ReceiveCallback(IAsyncResult ar)
-        {
-            UdpState udpReceiveState = ar.AsyncState as UdpState;
-            if (ar.IsCompleted)
-            {
-                Byte[] receiveBytes = udpReceiveState.udpClient.EndReceive(ar, ref udpReceiveState.ipEndPoint);
-                MyTreaty my = MyTreaty.GetMyTreaty(receiveBytes);
-                //接收完数据，进行数据判断回复
-                //readMsg(udpReceiveState, my);
-            }
-        }
 
-        public void ReceiveMsg()
-        {
-            Console.WriteLine("listening for messages");
-            while (true)
-            {
-                lock (this)
-                {
-                    IAsyncResult ar = udpclient.BeginReceive(new AsyncCallback(ReceiveCallback), udpclient);
-                }
-            }
-        }
+
 
         private void ReceiveMessage()
         {
@@ -88,7 +61,7 @@ namespace P2PChat
 
 
         #region msg判断函数
-        public void readMsg(IPEndPoint remoteIpep, MyTreaty mytreaty)
+        public   void readMsg(IPEndPoint remoteIpep, MyTreaty mytreaty)
         {
             //文本 type=6
             //图片 type=7
@@ -97,11 +70,9 @@ namespace P2PChat
             string name = mytreaty.Name;
             string pwd = mytreaty.Pwd;
             string result = Encoding.GetEncoding("utf-8").GetString(mytreaty.Content);
+            Form_online_user form_online_user = Form_online_user.getInstance();
 
-            if (mytreaty.Type == 8) //心跳包
-            {
-                //更新心跳包
-            }
+         
             if (mytreaty.Type == 1) //login
             {
                 //验证密码
@@ -110,6 +81,15 @@ namespace P2PChat
                 {
                     //验证成功
                     MessageBox.Show("login success");
+                    Application.Run(form_online_user);
+                    this.Close();
+                    this.closeForm();
+                    //Form_online_user form_online_user = Form_online_user.getInstance();
+                    //form_online_user.user_name = mytreaty.Name;
+                    //form_online_user.Show();
+                    //this.Close();
+                    //this.Dispose();
+                    
                 }
                 else
                 {
@@ -138,18 +118,28 @@ namespace P2PChat
             }
         }
 
+        public  void closeForm()
+        {
+            this.Hide();
+            //this.Dispose();
+        }
+
         #endregion
 
         //====================================================
 
-
-
-
-
-
-        public Form_login()
+        private Form_login()
         {
             InitializeComponent();
+        }
+
+        public static Form_login getInstance()
+        {
+            if(instance==null)
+            {
+                instance = new Form_login();
+            }
+            return instance;
         }
 
 
@@ -159,15 +149,15 @@ namespace P2PChat
         //窗体加载
         private void Form_login_Load(object sender, EventArgs e)
         {
-            Thread t = new Thread(ReceiveMessage);
-            t.Start();
+          
         }
 
 
         //注册button
         private void button_register_Click(object sender, EventArgs e)
         {
-                 
+            Form_register form_register = new Form_register();
+            form_register.Show();
         }
 
         
@@ -188,58 +178,15 @@ namespace P2PChat
             }
 
            MyTreaty login_msg = new MyTreaty(1, textBox_name.Text.Trim(), textBox_pwd.Text.Trim(), UTF8Encoding.UTF8.GetBytes("login"), DateTime.Now, "");
-           //
+           
 
            udpclient.SendAsync(login_msg.GetBytes(), login_msg.GetBytes().Count(), udpServerIp);
   
         }
 
 
-        /// <summary>
-        /// 接收socket 信息
-        /// </summary>
-        /// <param name="AccepterID"></param>
-        /// <param name="AcceptData"></param>
-        void socket_OnStreamDataAccept(AsySocket accept_socket, MyTreaty AcceptData)
-        {
-            string result = AcceptData.Name;
-            Console.WriteLine("client 收到信息 ");
 
-            if (AcceptData.Type == 1)//登录结果
-            {
-                Console.WriteLine(result);
-                if (result == "y")
-                {
-                    MessageBox.Show("登录成功");
-                    //建立在线用户窗体
-                    //form_online_user.Show();
-                    //this.Hide();
 
-                }
-                else
-                {
-                    MessageBox.Show("登录失败");
-                }
-            }
-        }
-
-        void socket_OnClosed(string SocketID, string ErrorMessage)
-        {
-            //服务器关闭
-            MessageBox.Show(this, "服务器关闭");
-            this.Close();
-        }
-        ///// <summary>
-        ///// 接收数据触发
-        ///// </summary>
-        ///// <param name="AccepterID"></param>
-        ///// <param name="AcceptData"></param>
-        //void socket_OnStringDataAccept(string AccepterID, string AcceptData)
-        //{
-        //    AddMsg(AcceptData);
-        //}
-   
-        // delegate void CallBackRef(string msg);
         /// <summary>
         /// 绑定消息
         /// </summary>

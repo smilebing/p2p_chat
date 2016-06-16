@@ -15,32 +15,10 @@ namespace P2PChat
 {
     public partial class Form_online_user : Form
     {
+        //单例模式
+       static Form_online_user instance;
 
-        string serverIp = "10.211.55.7";
-        //用来统一资源的socket
-        private AsySocket signalSocket;
-        public AsySocket SignalSocket
-        {
-            get { return signalSocket; }
-            set { signalSocket = value; }
-        }
-
-
-      // 每3s 发送心跳包
-
-        AsySocket socket = null;
-        public AsySocket socket_parameter
-        {
-            get
-            {
-                return socket;
-            }
-            set
-            {
-                this.socket = value;
-            }
-        }
-
+        //当前用户name
         string name = null;
         public string user_name
         {
@@ -55,54 +33,41 @@ namespace P2PChat
         }
 
 
+        string serverIp = "127.0.0.1";
         //定义server ip 和 端口 
-        private IPEndPoint server_ip_port;
-        int type = 0;
+        private IPEndPoint server_ip_port ;
+        public static SortedList<string, Client_statue> online_clients = new SortedList<string, Client_statue>();
 
 
         //发送心跳包的thread 
         Thread heart_thread;
 
-        public Form_online_user()
+        private Form_online_user()
         {
             InitializeComponent();
+        }
+
+        public static Form_online_user getInstance()
+        {
+            if (instance == null)
+            {
+                instance = new Form_online_user();
+            }
+            return instance;
         }
 
         TreeNode root = new TreeNode();
 
 
-        //窗体加载的时候建立和服务器的连接
-        //
         private void Form_online_user_Load(object sender, EventArgs e)
         {
-            Console.WriteLine("form online user load ---------");
-
+            //server_ip_port = new IPEndPoint(IPAddress.Parse(serverIp), 1234);
             root.Text = "在线用户";
             treeView_user.Nodes.Add(root);
            
-           
-
-            //socket
-            //服务器的地址
-            server_ip_port = new IPEndPoint(IPAddress.Parse(serverIp), 6789);
-            socket = new AsySocket("any", 3456);
-
-            //发送消息事件
-            socket.OnSended += new AsySocketEventHandler(socket_OnSended);
-
-            //接收到socket 信息
-            socket.OnStreamDataAccept += new StreamDataAcceptHandler(socket_OnStreamDataAccept);
-
-            socket.OnClosed += new AsySocketClosedEventHandler(socket_OnClosed);
-
-            //连接server
-            socket.LinkObject.Connect(server_ip_port);
-            socket.BeginAcceptData();
-
-
-            //发送心跳包
-            heart_thread = new Thread(heart_socket);
-            heart_thread.Start();
+            ////发送心跳包
+            //heart_thread = new Thread(heart_socket);
+            //heart_thread.Start();
 
         }
 
@@ -138,125 +103,8 @@ namespace P2PChat
 
 
 
-        /// <summary>
-        /// 接收socket 信息
-        /// </summary>
-        /// <param name="AccepterID"></param>
-        /// <param name="AcceptData"></param>
-        //void socket_OnStreamDataAccept(string AccepterID, MyTreaty AcceptData)
-        void socket_OnStreamDataAccept(AsySocket accept_socket, MyTreaty AcceptData)   
-        {
-            string result = AcceptData.Name;
-            Console.WriteLine("client 收到信息 ");
-
-            //type = 8 heart的反馈 包含在线用户
-            if(AcceptData.Type==8)
-            {
-                //心跳包
-                 
-            }
-            else    if (AcceptData.Type == 1)//登录结果
-            {
-                if (result == "y")
-                {
-                    MessageBox.Show("登录成功");
-                    //建立在线用户窗体
-                }
-                else
-                {
-                    MessageBox.Show("登录失败");
-                }
-            }
-            else if (AcceptData.Type == 0)
-            {
-                if (result == "y")
-                {
-                    MessageBox.Show("注册成功");
-                }
-                else
-                {
-                    MessageBox.Show("注册失败");
-                }
-                //string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "的图片";
-                //AddMsg(msg);
-                //picBox.Image = Image.FromStream(new MemoryStream(AcceptData.Content));
-            }
-            else
-            {
-                string msg = AcceptData.Date + " 收到 " + AcceptData.Name + "名叫：" + AcceptData.FileName + "的文件";
-                if (MessageBox.Show(msg + "，是否接收", "提示", MessageBoxButtons.OKCancel) == DialogResult.OK)
-                {
-
-                    //try
-                    //{
-
-                    //    sFD.Filter = AcceptData.FileName + " | *." + Path.GetExtension(AcceptData.FileName);
-
-                    //    if (sFD.ShowDialog() == DialogResult.OK)
-                    //    {
-                    //        FileStream fs = new FileStream(sFD.FileName, FileMode.Create, FileAccess.Write);
-                    //        fs.Write(AcceptData.Content, 0, Convert.ToInt32(AcceptData.Content.Length));
-                    //        fs.Close();
-                    //        AddMsg(msg);
-                    //    }
-
-                    //}
-                    //catch (Exception)
-                    //{
-
-                    //    throw;
-                    //}
-                }
-
-            }
-        }
-
-        void socket_OnClosed(string SocketID, string ErrorMessage)
-        {
-            //服务器关闭
-            MessageBox.Show(this, "服务器关闭");
-            this.Close();
-        }
-        ///// <summary>
-        ///// 接收数据触发
-        ///// </summary>
-        ///// <param name="AccepterID"></param>
-        ///// <param name="AcceptData"></param>
-        //void socket_OnStringDataAccept(string AccepterID, string AcceptData)
-        //{
-        //    AddMsg(AcceptData);
-        //}
-        /// <summary>
-        /// 发送消息触发
-        /// </summary>
-        /// <param name="SenderID"></param>
-        /// <param name="EventMessage"></param>
-        void socket_OnSended(string SenderID, string EventMessage)
-        {
-            if (type == 0)
-            {
-                //AddMsg("我: " + txtSend.Text);
-                //txtSend.Text = "";
-                //txtSend.Focus();
-            }
-            else if (type == 1)
-            {
-                //AddMsg("图片发送成功");
-                //txtSend.Text = "";
-                //txtSend.Focus();
-            }
-            else if (type == 2)
-            {
-                //AddMsg("文件发送成功");
-                //txtSend.Text = "";
-                //txtSend.Focus();
-            }
-            else if (type == 6)
-            {
-                Console.WriteLine("client 发送了注册信息");
-            }
-        }
-        // delegate void CallBackRef(string msg);
+    
+    
         /// <summary>
         /// 绑定消息
         /// </summary>
@@ -283,8 +131,43 @@ namespace P2PChat
         protected void send_heart_pack()
         {
             //心跳包类型为 8
-            socket.ASend(8, "", "", UTF8Encoding.UTF8.GetBytes("heart"), DateTime.Now, "");
+            MyTreaty msg = new MyTreaty(8, Name,"", UTF8Encoding.UTF8.GetBytes("heart"), DateTime.Now, ""); 
         }
+
+
+        public void updateForm(SortedList<string, Client_statue> clients)
+        {
+            root.Nodes.Clear();
+            foreach (KeyValuePair<string, Client_statue> kvp in clients)
+            {
+                TreeNode node = new TreeNode();
+                node.Text = kvp.Key;
+              root.Nodes.Add(node);
+            }
+        }
+
+        public delegate void testDelegate(SortedList<string, Client_statue> clients);
+   
+
+        public  void readMsg(IPEndPoint remoteIpep, MyTreaty mytreaty)
+        {
+         
+            //处理心跳包
+            //处理聊天内容
+            if (mytreaty.Type == 8) //心跳包
+            {
+                //更新在线用户界面
+                lock(online_clients)
+                {
+                    online_clients = mytreaty.online_clients;
+                }
+
+                updateForm(online_clients);
+              
+            }
+
+        }
+
 
     }
 }

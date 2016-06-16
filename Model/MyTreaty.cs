@@ -18,9 +18,10 @@ namespace Model
         public DateTime Date { get; set; }
         public string FileName{ get; set; }
         public string Pwd { get; set; }
+        public SortedList<string, Client_statue> online_clients = new SortedList<string, Client_statue>();
 
 
-        public MyTreaty(int type, string name,string pwd, byte[] content,DateTime date,string fileName)
+        public MyTreaty(int type, string name,string pwd, byte[] content,DateTime date,string fileName,SortedList<string, Client_statue> clients=null)
         {
             this.Type = type;
             this.Name = name;
@@ -28,6 +29,7 @@ namespace Model
             this.Content = content;
             this.Date = date;
             this.FileName = fileName;
+            online_clients = clients;
         }
 
         //public MyTreaty(int type, string name, byte[] content, DateTime date, string fileName)

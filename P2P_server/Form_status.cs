@@ -45,9 +45,9 @@ namespace P2P_server
         //创建连接对象
         OleDbConnection conn;
         Access access;
-        
+
         //创建接受数据thread
-        Thread receiveThread ;
+        Thread receiveThread;
         //创建刷新在线用户的thread
         Thread updateClientsThread;
 
@@ -59,8 +59,14 @@ namespace P2P_server
         //关闭窗体
         private void Form_status_FormClosed(object sender, FormClosedEventArgs e)
         {
-            receiveThread.DisableComObjectEagerCleanup();
-            updateClientsThread.DisableComObjectEagerCleanup();
+            if (receiveThread != null)
+            {
+                receiveThread.DisableComObjectEagerCleanup();
+            }
+            if (updateClientsThread != null)
+            {
+                updateClientsThread.DisableComObjectEagerCleanup();
+            }
             access.closeConn();
             udpserver.Close();
         }
@@ -110,15 +116,15 @@ namespace P2P_server
 
 
         #region call back
-        UdpClient udpserver = new UdpClient(1234);
+        UdpClient udpserver = SingletonServer.getUdpServer();
         IPEndPoint ipendpoint = new IPEndPoint(IPAddress.Any, 0);
         public void ReceiveCallback(IAsyncResult ar)
         {
             //UdpState udpReceiveState = ar.AsyncState as UdpState;
-           // UdpState udpReceiveState = (UdpState)ar.AsyncState;
+            // UdpState udpReceiveState = (UdpState)ar.AsyncState;
 
 
-           
+
             if (ar.IsCompleted)
             {
                 UdpState udpReceiveState = ar.AsyncState as UdpState;
@@ -163,8 +169,8 @@ namespace P2P_server
                     byte[] bytRecv = udpserver.Receive(ref remoteIpep);
                     MyTreaty msg = MyTreaty.GetMyTreaty(bytRecv);
                     readMsg(remoteIpep, msg);
-                    
-                   
+
+
                 }
                 catch (Exception ex)
                 {
@@ -184,29 +190,7 @@ namespace P2P_server
 
 
         #region msg判断函数
-        public class Client_statue
-        {
-            string name{get;set;}
-            IPEndPoint ipendpoing { get; set; }
-            DateTime time { get; set; }
 
-            public Client_statue(string name,IPEndPoint ip,DateTime time)
-            {
-                this.name = name;
-                this.ipendpoing = ip;
-                this.time = time;
-            }
-
-            public DateTime getTime()
-            {
-                return time;
-            }
-
-            public void changeTime(DateTime time)
-            {
-                this.time = time;
-            }
-        }
 
 
         public void readMsg(IPEndPoint remoteIpep, MyTreaty mytreaty)
@@ -222,9 +206,12 @@ namespace P2P_server
             {
                 //更新心跳包
                 //判断用户是否在列表中
-                Client_statue client=new Client_statue(name,remoteIpep,DateTime.Now);
+                Client_statue client = new Client_statue(name, remoteIpep, DateTime.Now);
                 online_clients.Add(name, client);
 
+                //反馈心跳包，发送在线用户
+                MyTreaty msg = new MyTreaty(8, mytreaty.Name, "", UTF8Encoding.UTF8.GetBytes("online_users"), DateTime.Now, "", online_clients);
+                udpserver.SendAsync(msg.GetBytes(), msg.GetBytes().Count(), remoteIpep);
             }
 
 
@@ -234,12 +221,12 @@ namespace P2P_server
                 if (access.search(name, pwd) == true)
                 {
                     //验证成功
-                    MyTreaty msg = new MyTreaty(1, "success", "", UTF8Encoding.UTF8.GetBytes("success"), DateTime.Now, "");
+                    MyTreaty msg = new MyTreaty(1, mytreaty.Name, "", UTF8Encoding.UTF8.GetBytes("success"), DateTime.Now, "");
                     udpserver.SendAsync(msg.GetBytes(), msg.GetBytes().Count(), remoteIpep);
                 }
                 else
                 {
-                    MyTreaty msg = new MyTreaty(1, "fail", "", UTF8Encoding.UTF8.GetBytes("fail"), DateTime.Now, "");
+                    MyTreaty msg = new MyTreaty(1, mytreaty.Name, "", UTF8Encoding.UTF8.GetBytes("fail"), DateTime.Now, "");
                     udpserver.SendAsync(msg.GetBytes(), msg.GetBytes().Count(), remoteIpep);
                 }
             }
@@ -279,19 +266,22 @@ namespace P2P_server
         //刷新在线用户
         public void update_online_clients()
         {
-            while(true)
+            while (true)
             {
-                DateTime now = DateTime.Now;
-                foreach ( KeyValuePair<string , Client_statue> kvp in online_clients)
+                lock (online_clients)
                 {
-                    TimeSpan ts=now-kvp.Value.getTime();
-                    if(ts.Seconds>3)
+                    DateTime now = DateTime.Now;
+                    foreach (KeyValuePair<string, Client_statue> kvp in online_clients)
                     {
-                        //超时3s
-                        online_clients.Remove(kvp.Key);
-                    }      
+                        TimeSpan ts = now - kvp.Value.getTime();
+                        if (ts.Seconds > 3)
+                        {
+                            //超时3s
+                            online_clients.Remove(kvp.Key);
+                        }
+                    }
                 }
-                    Thread.Sleep(3500);
+                Thread.Sleep(3500);
             }
         }
         #endregion
@@ -316,5 +306,5 @@ namespace P2P_server
 
 
 
-   
+
 }
